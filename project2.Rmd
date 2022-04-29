@@ -1,0 +1,199 @@
+---
+title: Was Alex Rodriguez snubbed of the 2002 AL MVP?
+author: Quinn Navara
+date: '2022-04-25'
+slug: was-alex-rodriguez-snubbed-of-the-2002-al-mvp
+categories: []
+tags: []
+---
+
+In the 2002 MLB season, fans saw the Anaheim Angels claim their first and only World Series championship by beating the the San Francisco Giants. Fans also saw Barry Bonds of the Giants win NL MVP, while Oakland A's shortstop, Miguel Tejada, was crowned AL MVP. However, should Tejada have won MVP of the American League?
+
+Coming in at second in the AL MVP voting was Alex Rodriguez. The Texas Rangers' 26-year-old shortstop had one of the best seasons of his accomplished career in 2002. Many people have voiced that Rodriguez should have won the AL MVP instead of Tejada.
+
+How does the MLB MVP voting work?
+
+The MVP awards are voted on by 30 members of the Baseball Writers Association of America. One member from each city in the Major League. Each member then ranks their top 10 players from each league. Each place is awarded points that are called "vote points". At the end of the voting, the players with the most vote points from each league will be awarded NL & AL MVP.
+
+How many points does each place get?
+
+- 1st = 14 points
+- 2nd = 9 points
+- 3rd = 8 points
+- 4th = 7 points
+- 5th = 6 points
+- 6th = 5 points
+- 7th = 4 points
+- 8th = 3 points
+- 9th = 2 points
+- 10th = 1 point
+
+```{r message=FALSE, warning=FALSE, echo=FALSE}
+
+library(tidyverse)
+library(ggrepel)
+library(scales)
+library(gt)
+library(rvest)
+library(ggalt)
+
+mlbstats <- read_csv("data/mvpalstats.csv")
+
+mlbstats <-
+  mlbstats %>% rename(
+    G = G...8,
+    H = H...11,
+    HR = HR...12,
+    BB = BB...15,
+    VotePoints = `Vote Pts`
+  )
+
+votes <- mlbstats %>% 
+  select(Rank, Name, Team, VotePoints) %>% 
+  arrange(desc(VotePoints)) %>% 
+  top_n(5, VotePoints)
+  
+
+```
+
+```{r message=FALSE, warning=FALSE, echo=FALSE}
+
+votes %>% 
+  gt() %>% 
+  cols_label(
+    VotePoints = "Vote Points"
+  ) %>%
+  tab_header(
+    title = "Miguel Tejada won the 2002 AL MVP by a landslide",
+    subtitle = "Oakland A's star beat out Rodriguez by over 100 vote points"
+  ) %>%  
+  tab_source_note(
+    source_note = md("**By:** Quinn Navara  |  **Source:** [Baseball Reference](https://www.baseball-reference.com/awards/awards_2002.shtml#all_AL_MVP_voting)")
+  ) %>% 
+  tab_style(
+    style = cell_text(color = "black", weight = "bold", align = "left"),
+    locations = cells_title("title")
+  ) %>% 
+  tab_style(
+    style = cell_text(color = "black", align = "left"),
+    locations = cells_title("subtitle")
+  ) %>%
+  tab_style(
+     locations = cells_column_labels(columns = everything()),
+     style = list(
+       cell_borders(sides = "bottom", weight = px(3)),
+       cell_text(weight = "bold", size=12)
+     )
+   ) %>%
+  opt_row_striping() %>% 
+  tab_style(
+    style = list(
+      cell_fill(color = "blue"),
+      cell_text(color = "white")
+      ),
+    locations = cells_body(
+      rows = Name == "Alex Rodriguez")
+  )
+```
+
+Miguel Tejada was voted as the 2002 AL MVP over Alex Rodriguez by over a 100 vote points. This means that the voters saw Tejada as being the better player in 2002. 
+
+However, the offensive statistics say differently.
+
+```{r message=FALSE, warning=FALSE, echo=FALSE}
+
+battingstats <- mlbstats %>% 
+  filter(Name == "Miguel Tejada" | Name == "Alex Rodriguez" | Name == "Alfonso Soriano" | Name == "Garret Anderson" | Name == "Jason Giambi") %>% 
+  select(Name, Team, OBP, SLG)
+
+tejada <- mlbstats %>% 
+  filter(Name == "Miguel Tejada") %>% 
+  select(Name, OBP, SLG)
+
+rodriguez <- mlbstats %>% 
+  filter(Name == "Alex Rodriguez") %>% 
+  select(Name, OBP, SLG)
+
+giambi <- mlbstats %>% 
+  filter(Name == "Jason Giambi") %>% 
+  select(Name, OBP, SLG)
+
+```
+
+```{r message=FALSE, warning=FALSE, echo=FALSE}
+
+ggplot() + 
+  geom_point(data=battingstats, aes(x=OBP, y=SLG)) +
+  labs(title="A-Rod truly outperformed Oakland's star shortstop", subtitle="Tejada ranked last in OBP out of top 5 players with most vote points.", x="On-base Percentage (OBP)", y="Slugging Percentage (SLG)", caption="Source: Baseball Reference | Graphic by Quinn Navara") +
+  geom_point(data=tejada, aes(x=OBP, y=SLG), color="green") +
+  geom_point(data=rodriguez, aes(x=OBP, y=SLG), color="blue") +
+  geom_point(data=giambi, aes(x=OBP, y=SLG), color="navy") +
+  geom_text_repel(
+    data=tejada, 
+    aes(x=`OBP`, y=`SLG`, label=Name)
+  ) +
+  geom_text_repel(
+    data=rodriguez, 
+    aes(x=OBP, y=`SLG`, label=Name)
+  ) + 
+  geom_text_repel(
+    data=giambi, 
+    aes(x=`OBP`, y=`SLG`, label=Name)
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(size = 12, face = "bold"),
+    axis.title = element_text(size = 8), 
+    plot.subtitle = element_text(size=10), 
+    panel.grid.minor = element_blank()
+    )
+
+```
+
+Alex Rodriguez dominated the American League offensively. Other than the New York Yankees' Jason Giambi, no one came close to A-Rod. Rodriguez's slugging percentage was ahead of everyone and was second in on-base percentage, behind Giambi. Tejada struggled offensively compared to Rodriguez. The gap between A-Rod and Tejada is wide. 
+
+When you think of an MVP, you think of someone who performs extremely well in the batter's box. Tejada did not show that in the 2002 season. If anything, the MVP discussion should have been between Alex Rodriguez and Jason Giambi.
+
+```{r message=FALSE, warning=FALSE, echo=FALSE}
+
+top10 <- mlbstats %>% 
+  arrange(desc(HR)) %>% 
+  select(Name,HR) %>% 
+  top_n(10)
+
+```
+
+```{r message=FALSE, warning=FALSE, echo=FALSE}
+
+ggplot(top10, aes(x = reorder(Name, HR), weight = HR)) + 
+  geom_bar() +
+  labs(title = "Rodriguez led the MLB, not just the AL, in Home Runs ", subtitle="Tejada came in at 6th in the AL HR battle.", 
+       x = "Name", y = "Home Runs") +   
+  scale_y_continuous(limits=c(0,60)) +
+  theme_light() +
+  coord_flip() +
+  theme(
+    title = element_text(color = "black", size = 13, face = 'bold'),
+    plot.subtitle = element_text(size=11),
+    plot.background = element_rect(fill = "slategray2"),
+    panel.border = element_rect(linetype = "dashed", fill = NA),
+    panel.grid.major = element_line(colour = "black"),
+    axis.text = element_text(color = "black")
+  ) 
+
+```
+
+It's always fun to see who hits the most home runs in the MLB. It also helps in the MVP discussion, because if you're hitting the most home runs, it means you're pretty good offensively. Alex Rodriguez led the MLB with 57 home runs in the 2002 season. 23 more than Miguel Tejada. In the American League, the only player to challenge A-Rod in the home run category is Jim Thome with 52. 
+
+Overall, A-Rod outperformed Tejada in practically every offensive statistic. The only statistic where Tejada was better than Rodriguez was batting average. Rodriguez batted .300, while Tejada batted .308. Not looking at the defensive statistics, Rodriguez was clearly the better player that season. However, the voters don't just look at the statistics. They look to see how the player's team is doing that year.
+
+Unfortunately, A-Rod's Rangers finished last in the AL West with a record of 72-90. Tejada's Athletics finished on top of the West Division with 103-59 record.
+
+The discussion will still go on about who should have won the 2002 AL MVP.
+
+
+
+
+
+
+
